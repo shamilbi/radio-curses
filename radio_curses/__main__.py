@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import curses
 import curses.ascii
+import time
+from threading import Event, RLock, Thread
 
 import requests  # type: ignore[import-untyped]
 from lxml.etree import XML, Element  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
@@ -94,6 +96,11 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
 
         self.mpv = Mpv()
 
+        self.status_lock = RLock()
+        self.thread_meta = None
+        self.stop_meta = Event()
+        self.refresh_meta = Event()
+
         self.create_windows()
 
     def create_windows(self):
@@ -139,10 +146,12 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
 
         self.win.refresh()
 
+        self.screen.refresh()
+
         ch = curses.ACS_HLINE
         self.win3.border(' ', ' ', ch, ' ', ch, ch, ' ', ' ')
-
-        self.screen.refresh()
+        self.win3.refresh()
+        self.refresh_meta.set()
 
     def right(self, i: int):
         if not (r := self.get_record(i)):
@@ -163,6 +172,18 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         self.win.cur, self.win.idx = self.record.pos
         self.win.refresh()
 
+    def poll_metadata(self, stop: Event, refresh: Event):
+        t = (None, None)  # radio, song
+        while not stop.is_set():
+            d = self.mpv.send_command({'command': ['get_property', 'metadata']})
+            d2 = d['data']
+            t2 = (d2['icy-name'], d2['icy-title'])
+            if t2 != t or refresh.is_set():
+                t = (radio, song) = t2
+                self.status(f'{radio}: {song}')
+                refresh.clear()
+            time.sleep(5)
+
     def start_player(self, i: int):
         if not (r := self.get_record(i)):
             return
@@ -170,19 +191,24 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         if r.isaudio():
             self.status(f'Start {r.text} ...')
             self.mpv.start(r.d['URL'])
+            if not self.thread_meta:
+                self.thread_meta = Thread(target=self.poll_metadata, args=(self.stop_meta, self.refresh_meta))
+                self.thread_meta.start()
 
     def status(self, s: str):
-        _, cols = self.win3.getmaxyx()
-        win = self.win3.derwin(1, cols, 1, 0)
-        win.erase()
-        win_addstr(win, 0, 0, s)
-        win.refresh()
+        with self.status_lock:
+            _, cols = self.win3.getmaxyx()
+            win = self.win3.derwin(1, cols, 1, 0)
+            win.erase()
+            win_addstr(win, 0, 0, s)
+            win.refresh()
 
     def run(self):
         try:
             self.refresh_all()
             self.input_loop()
         finally:
+            self.stop_meta.set()
             self.mpv.stop()
 
     def input_loop(self):  # pylint: disable=too-many-branches,too-many-statements
