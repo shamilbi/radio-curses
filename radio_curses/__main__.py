@@ -175,14 +175,25 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
     def poll_metadata(self, stop: Event, refresh: Event):
         t = (None, None)  # radio, song
         while not stop.is_set():
-            d = self.mpv.send_command({'command': ['get_property', 'metadata']})
-            d2 = d['data']
-            t2 = (d2['icy-name'], d2['icy-title'])
-            if t2 != t or refresh.is_set():
-                t = (radio, song) = t2
-                self.status(f'{radio}: {song}')
-                refresh.clear()
             time.sleep(5)
+            d = self.mpv.send_command({'command': ['get_property', 'metadata']})
+            d2 = d.get('data')
+            if not d2:
+                continue
+            radio = d2.get('icy-name')
+            if not radio:
+                continue
+            song = d2.get('icy-title')
+            if song:
+                t2 = (radio, song)
+                if t2 != t or refresh.is_set():
+                    t = t2
+                    self.status(f'{radio}: {song}')
+                    refresh.clear()
+            elif t[0] != radio or refresh.is_set():
+                t = (radio, None)
+                self.status(f'{radio}:')
+                refresh.clear()
 
     def start_player(self, i: int):
         if not (r := self.get_record(i)):
