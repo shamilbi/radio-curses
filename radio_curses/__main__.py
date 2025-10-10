@@ -19,6 +19,7 @@ HELP = [
     ("PgDown", "Page down"),
     ("g, Home", "Move to first item"),
     ("G, End", "Move to last item"),
+    ("Enter", "Play audio"),
 ]
 
 
@@ -60,6 +61,10 @@ class Record:
     def __getitem__(self, i: int) -> Record:
         return self.children[i]
 
+    @property
+    def text(self) -> str:
+        return self.d['text']
+
 
 def from_xml(root: Element, r: Record):
     for e in root.xpath('./outline'):
@@ -98,10 +103,13 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         '''
         maxy, maxx = self.screen_size
 
-        rows, cols = (maxy - 2, maxx)
+        rows, cols = (maxy - 4, maxx)
 
         win = self.screen.derwin(rows, cols, 2, 0)
         self.win = List(win, self, current_color=curses.color_pair(1) | curses.A_BOLD)
+
+        # status
+        self.win3 = self.screen.derwin(2, cols, maxy - 2, 0)
 
     def refresh_win_deps(self):
         pass
@@ -115,10 +123,9 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
     def get_record_str(self, i: int) -> str:
         if not (r := self.get_record(i)):
             return ''
-        radio = r.d['text']
         if r.isdir():
-            return f'{radio}/'
-        return radio
+            return f'{r.text}/'
+        return r.text
 
     def records_len(self) -> int:
         return len(self.record)
@@ -131,6 +138,10 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         win_addstr(self.screen, 0, 0, s[:cols])
 
         self.win.refresh()
+
+        ch = curses.ACS_HLINE
+        self.win3.border(' ', ' ', ch, ' ', ch, ch, ' ', ' ')
+
         self.screen.refresh()
 
     def right(self, i: int):
@@ -157,7 +168,15 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
             return
         self.record.pos = (self.win.cur, self.win.idx)
         if r.isaudio():
+            self.status(f'Start {r.text} ...')
             self.mpv.start(r.d['URL'])
+
+    def status(self, s: str):
+        _, cols = self.win3.getmaxyx()
+        win = self.win3.derwin(1, cols, 1, 0)
+        win.erase()
+        win_addstr(win, 0, 0, s)
+        win.refresh()
 
     def run(self):
         try:
