@@ -7,10 +7,13 @@ import shutil
 import socket
 import subprocess
 from contextlib import contextmanager
+from pathlib import Path
 from threading import Event
 
 import requests  # type: ignore[import-untyped]
-from lxml.etree import XML, Element  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
+from lxml.etree import XML  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
+from lxml.etree import Element, ElementTree, SubElement  # pylint: disable=no-name-in-module
+from xdg_base_dirs import xdg_data_home
 
 
 @contextmanager
@@ -143,3 +146,35 @@ def from_url(url: str, r: Record):
     xml = XML(resp.content)
     for e in xml.xpath('/opml/body'):
         from_xml(e, r)
+
+
+def from_file(file: Path, r: Record):
+    with open(file, 'rb') as fp:
+        xml = XML(fp.read())
+    for e in xml.xpath('/opml/body'):
+        from_xml(e, r)
+
+
+class Favourites(Record):
+    def __init__(self, parent: Record):
+        super().__init__({'text': 'Favourites'}, parent)
+
+    def load_from_home(self):
+        for i in ('radio-curses', 'curseradio'):
+            file = xdg_data_home() / i / 'favourites.opml'
+            if file.is_file():
+                from_file(file, self)
+                return
+
+    def save_to_home(self):
+        dir_ = xdg_data_home() / 'radio-curses'
+        dir_.mkdir(mode=0o755, exist_ok=True)
+        file = dir_ / 'favourites.opml'
+
+        xml = Element("opml")
+        body = SubElement(xml, "body")
+        for c in self.children:
+            e = Element("outline", attrib=c.d)
+            body.append(e)
+        opml = ElementTree(xml)
+        opml.write(str(file))
