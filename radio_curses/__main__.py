@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import curses
 import curses.ascii
-import time
+import sys
 from threading import Event, RLock, Thread
 
 import requests  # type: ignore[import-untyped]
@@ -95,6 +95,7 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         from_url('https://opml.radiotime.com/', self.record)
 
         self.mpv = Mpv()
+        self.radio = ''
 
         self.status_lock = RLock()
         self.thread_meta = None
@@ -173,26 +174,24 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         self.win.refresh()
 
     def poll_metadata(self, stop: Event, refresh: Event):
-        t = (None, None)  # radio, song
-        while not stop.is_set():
-            time.sleep(5)
-            d = self.mpv.send_command({'command': ['get_property', 'metadata']})
+        prev_song = None
+        while True:
+            if stop.wait(5):
+                return
+            d = self.mpv.get_metadata(stop)
             d2 = d.get('data')
             if not d2:
                 continue
-            radio = d2.get('icy-name')
-            if not radio:
-                continue
             song = d2.get('icy-title')
             if song:
-                t2 = (radio, song)
-                if t2 != t or refresh.is_set():
-                    t = t2
-                    self.status(f'{radio}: {song}')
+                song = song.rstrip()
+                if prev_song != song or refresh.is_set():
+                    prev_song = song
+                    self.status(f'{self.radio}: {song}')
                     refresh.clear()
-            elif t[0] != radio or refresh.is_set():
-                t = (radio, None)
-                self.status(f'{radio}:')
+            elif refresh.is_set():
+                prev_song = None
+                self.status(f'{self.radio}')
                 refresh.clear()
 
     def start_player(self, i: int):
@@ -200,7 +199,8 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
             return
         self.record.pos = (self.win.cur, self.win.idx)
         if r.isaudio():
-            self.status(f'Start {r.text} ...')
+            self.radio = r.text
+            self.status(f'Start {self.radio} ...')
             self.mpv.start(r.d['URL'])
             if not self.thread_meta:
                 self.thread_meta = Thread(target=self.poll_metadata, args=(self.stop_meta, self.refresh_meta))
@@ -214,13 +214,17 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
             win_addstr(win, 0, 0, s)
             win.refresh()
 
-    def run(self):
-        try:
-            self.refresh_all()
-            self.input_loop()
-        finally:
+    def shutdown(self, *_):
+        self.status('Closing ...')
+        if self.thread_meta and self.thread_meta.is_alive():
             self.stop_meta.set()
-            self.mpv.stop()
+            self.thread_meta.join()
+        self.mpv.stop()
+        sys.exit(0)
+
+    def run(self):
+        self.refresh_all()
+        self.input_loop()
 
     def input_loop(self):  # pylint: disable=too-many-branches,too-many-statements
         for char_ord in self.getch():
