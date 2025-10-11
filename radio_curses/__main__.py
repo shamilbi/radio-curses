@@ -7,7 +7,7 @@ from threading import Event, RLock, Thread
 
 from . import __version__
 from .curses_utils import App, List, win_addstr, win_help
-from .utils import Mpv, Record, from_url
+from .utils import Favourites, Mpv, Record, from_url
 
 HELP = [
     ("h", "This help screen"),
@@ -29,6 +29,9 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
         self.record = Record({})  # root record
+        self.fav = Favourites(self.record)
+        self.fav.load_from_home()
+        self.record.children.append(self.fav)
         from_url('https://opml.radiotime.com/', self.record)
 
         self.mpv = Mpv()
@@ -156,6 +159,7 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
 
     def shutdown(self, *_):
         self.status('Closing ...')
+        self.fav.save_to_home()
         if self.thread_meta and self.thread_meta.is_alive():
             self.stop_meta.set()
             self.thread_meta.join()
