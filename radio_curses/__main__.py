@@ -79,6 +79,8 @@ def from_xml(root: Element, r: Record):
 
 
 def from_url(url: str, r: Record):
+    if url.startswith('http://'):
+        url = f'{url[:4]}s{url[4:]}'  # https://
     resp = requests.get(url)  # pylint: disable=missing-timeout
     xml = XML(resp.content)
     for e in xml.xpath('/opml/body'):
@@ -107,7 +109,10 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
     def create_windows(self):
         '''
         radio-curses v...
+
         records ...
+        ------
+        status
         '''
         maxy, maxx = self.screen_size
 
