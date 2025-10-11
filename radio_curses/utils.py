@@ -4,7 +4,18 @@ import os
 import shutil
 import socket
 import subprocess
-import time
+from contextlib import contextmanager
+from threading import Event
+
+
+@contextmanager
+def unix_socket(timeout: float = 2.0):
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.settimeout(timeout)
+    try:
+        yield s
+    finally:
+        s.close()
 
 
 class Mpv:
@@ -31,24 +42,29 @@ class Mpv:
             cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL
         )
 
-    def send_command(self, cmd: dict) -> dict:
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        while True:
-            if not os.path.exists(self.socket):
-                time.sleep(2)
-                continue
+    def send_command(self, cmd: dict, stop: Event) -> dict:
+        with unix_socket() as client:
+            while True:
+                if not os.path.exists(self.socket):
+                    if stop.wait(2):
+                        return {}
+                    continue
+                try:
+                    client.connect(self.socket)
+                    break
+                except (ConnectionError, socket.timeout):
+                    if stop.wait(2):
+                        return {}
+                    continue
+            bytes_ = json.dumps(cmd).encode('utf-8') + b'\n'
             try:
-                client.connect(self.socket)
-                break
-            except ConnectionRefusedError:
-                time.sleep(2)
-                continue
-        bytes_ = json.dumps(cmd).encode('utf-8') + b'\n'
-        try:
-            client.sendall(bytes_)
-            return socket2json(client)
-        finally:
-            client.close()
+                client.sendall(bytes_)
+                return socket2json(client)
+            except socket.timeout:
+                return {}
+
+    def get_metadata(self, stop: Event) -> dict:
+        return self.send_command({'command': ['get_property', 'metadata']}, stop)
 
 
 def socket2json(s: socket.socket) -> dict:
