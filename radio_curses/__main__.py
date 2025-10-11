@@ -5,12 +5,9 @@ import curses.ascii
 import sys
 from threading import Event, RLock, Thread
 
-import requests  # type: ignore[import-untyped]
-from lxml.etree import XML, Element  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
-
 from . import __version__
 from .curses_utils import App, List, win_addstr, win_help
-from .utils import Mpv
+from .utils import Mpv, Record, from_url
 
 HELP = [
     ("h", "This help screen"),
@@ -23,68 +20,6 @@ HELP = [
     ("G, End", "Move to last item"),
     ("Enter", "Play audio"),
 ]
-
-
-class Record:
-    def __init__(self, d: dict, parent: Record | None = None):
-        self.d = d
-        self.parent = parent
-
-        self.children: list[Record] = []  # to view in a window
-        self.pos: tuple[int, int] = (0, 0)  # position: (cur, idx)
-
-    def add(self, d: dict) -> Record:
-        r = Record(d, self)
-        self.children.append(r)
-        return r
-
-    def isdir(self) -> bool:
-        if self.children:
-            return True
-        if 'URL' not in self.d:
-            return True
-        if self.d.get('type') == 'link':
-            return True
-        return False
-
-    def isaudio(self) -> bool:
-        if self.isdir():
-            return False
-        if self.d.get('type') == 'audio' and 'URL' in self.d:
-            return True
-        return False
-
-    def __len__(self):
-        return len(self.children)
-
-    def __bool__(self):
-        return True
-
-    def __getitem__(self, i: int) -> Record:
-        return self.children[i]
-
-    @property
-    def text(self) -> str:
-        return self.d['text']
-
-
-def from_xml(root: Element, r: Record):
-    for e in root.xpath('./outline'):
-        d = dict(e.attrib)
-        if 'text' not in d:
-            continue
-        r2 = r.add(d)
-        if 'URL' not in d:
-            from_xml(e, r2)
-
-
-def from_url(url: str, r: Record):
-    if url.startswith('http://'):
-        url = f'{url[:4]}s{url[4:]}'  # https://
-    resp = requests.get(url)  # pylint: disable=missing-timeout
-    xml = XML(resp.content)
-    for e in xml.xpath('/opml/body'):
-        from_xml(e, r)
 
 
 class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public-methods
