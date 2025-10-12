@@ -19,6 +19,7 @@ HELP = [
     ("g, Home", "Move to first item"),
     ("G, End", "Move to last item"),
     ("Right, Left", "Move to/from a directory"),
+    ("Shift-{Up,Down}", "Move a record up/down"),
     ("Enter", "Play audio"),
 ]
 
