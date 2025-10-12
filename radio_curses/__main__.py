@@ -18,6 +18,7 @@ HELP = [
     ("PgDown", "Page down"),
     ("g, Home", "Move to first item"),
     ("G, End", "Move to last item"),
+    ("Right, Left", "Move to/from a directory"),
     ("Enter", "Play audio"),
 ]
 
