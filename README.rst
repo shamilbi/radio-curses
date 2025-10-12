@@ -19,6 +19,7 @@ The current hotkeys are:
     * PgDown: Page down
     * g, Home: Move to first item
     * G, End: Move to last item
+    * Shift-Up,Down: Move a record up/down
     * Enter: Play audio
 
 .. |pypi| image:: https://badgen.net/pypi/v/radio-curses
