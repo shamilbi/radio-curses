@@ -20,6 +20,8 @@ HELP = [
     ("G, End", "Move to last item"),
     ("Right, Left", "Move to/from a directory"),
     ("Shift-{Up,Down}", "Move a record up/down"),
+    ("Insert", "Add to Favourites"),
+    ("Delete", "Delete from Favourites"),
     ("Enter", "Play audio"),
 ]
 
