@@ -20,6 +20,8 @@ The current hotkeys are:
     * g, Home: Move to first item
     * G, End: Move to last item
     * Shift-Up,Down: Move a record up/down
+    * Insert: Add to Favourites
+    * Delete: Delete from Favourites
     * Enter: Play audio
 
 .. |pypi| image:: https://badgen.net/pypi/v/radio-curses
