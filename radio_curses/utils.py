@@ -68,7 +68,7 @@ class Mpv:
             try:
                 client.sendall(bytes_)
                 return socket2json(client)
-            except socket.timeout:
+            except (socket.timeout, UnicodeDecodeError):
                 return {}
 
     def get_metadata(self, stop: Event) -> dict:
