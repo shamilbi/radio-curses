@@ -94,7 +94,10 @@ class Record:
         self.children: list[Record] = []  # to view in a window
         self.pos: tuple[int, int] = (0, 0)  # position: (cur, idx)
 
-    def add(self, d: dict) -> Record:
+    def add_dict(self, d: dict) -> Record:
+        if (url := d.get('URL')) and url.startswith('http://'):
+            url = f'{url[:4]}s{url[4:]}'  # https://
+            d['URL'] = url
         r = Record(d, self)
         self.children.append(r)
         return r
@@ -124,6 +127,9 @@ class Record:
     def __getitem__(self, i: int) -> Record:
         return self.children[i]
 
+    def __delitem__(self, i: int):
+        del self.children[i]
+
     @property
     def text(self) -> str:
         return self.d['text']
@@ -152,7 +158,7 @@ def from_xml(root: Element, r: Record):
         d = dict(e.attrib)
         if 'text' not in d:
             continue
-        r2 = r.add(d)
+        r2 = r.add_dict(d)
         if 'URL' not in d:
             from_xml(e, r2)
 
@@ -196,3 +202,16 @@ class Favourites(Record):
             body.append(e)
         opml = ElementTree(xml)
         opml.write(str(file))
+
+    def add_record(self, r: Record) -> bool:
+        if r.parent == self or not r.isaudio():
+            return False
+        # find the same URL
+        url = r.d['URL']
+        for i, r2 in enumerate(self.children):
+            if r2.d['URL'] == url:
+                # replace
+                self.children[i] = r
+                return False
+        self.children.append(r)
+        return True
