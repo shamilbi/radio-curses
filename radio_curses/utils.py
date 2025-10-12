@@ -128,6 +128,24 @@ class Record:
     def text(self) -> str:
         return self.d['text']
 
+    def move_child_up(self, i: int) -> bool:
+        l = self.children
+        if 0 < i < len(l):
+            r = l[i]
+            del l[i]
+            l.insert(i - 1, r)
+            return True
+        return False
+
+    def move_child_down(self, i: int) -> bool:
+        l = self.children
+        if 0 <= i < len(l) - 1:
+            r = l[i]
+            del l[i]
+            l.insert(i + 1, r)
+            return True
+        return False
+
 
 def from_xml(root: Element, r: Record):
     for e in root.xpath('./outline'):
