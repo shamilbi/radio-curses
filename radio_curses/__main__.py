@@ -55,13 +55,13 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         '''
         maxy, maxx = self.screen_size
 
-        rows, cols = (maxy - 4, maxx)
+        rows, cols = (maxy - 4, maxx - 2)
 
-        win = self.screen.derwin(rows, cols, 2, 0)
+        win = self.screen.derwin(rows, cols, 2, 1)
         self.win = List(win, self, current_color=curses.color_pair(1) | curses.A_BOLD)
 
         # status
-        self.win3 = self.screen.derwin(2, cols, maxy - 2, 0)
+        self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
 
     def refresh_win_deps(self):
         pass
@@ -86,15 +86,17 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
         self.screen.erase()
 
         s = f'radio-curses v{__version__} (h - Help)'
-        _, cols = self.win.win.getmaxyx()
-        win_addstr(self.screen, 0, 0, s[:cols])
+        win_addstr(self.screen, 0, 1, s)
+        self.screen.refresh()
+
+        maxy, maxx = self.screen_size
+        win = self.screen.derwin(maxy - 2, maxx, 1, 0)
+        win.erase()
+        win.box()
+        win.refresh()
 
         self.win.refresh()
 
-        self.screen.refresh()
-
-        ch = curses.ACS_HLINE
-        self.win3.border(' ', ' ', ch, ' ', ch, ch, ' ', ' ')
         self.win3.refresh()
         self.refresh_meta.set()
 
@@ -152,11 +154,9 @@ class Main(App):  # pylint: disable=too-many-instance-attributes,too-many-public
 
     def status(self, s: str):
         with self.status_lock:
-            _, cols = self.win3.getmaxyx()
-            win = self.win3.derwin(1, cols, 1, 0)
-            win.erase()
-            win_addstr(win, 0, 0, s)
-            win.refresh()
+            self.win3.erase()
+            win_addstr(self.win3, 0, 1, s)
+            self.win3.refresh()
 
     def shutdown(self, *_):
         self.status('Closing ...')
