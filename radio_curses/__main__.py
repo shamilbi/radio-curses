@@ -159,6 +159,18 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
     def record_move_down(self, i: int) -> bool:
         return self.record.move_child_down(i)
 
+    def add_to_favourites(self, i: int):
+        if not (r := self.get_record(i)):
+            return
+        if self.fav.add_record(r):
+            self.status('Added to Favourites')
+
+    def del_favourite(self, i: int):
+        if self.record != self.fav or not self.get_record(i):
+            return
+        del self.fav[i]
+        self.win.refresh()
+
     def status(self, s: str):
         with self.status_lock:
             self.win3.erase()
@@ -190,6 +202,10 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
                 self.left()
             elif char_ord == curses.ascii.LF:  # Enter
                 self.start_player(self.win.idx)
+            elif char_ord == curses.KEY_IC:  # insert
+                self.add_to_favourites(self.win.idx)
+            elif char_ord == curses.KEY_DC:  # delete
+                self.del_favourite(self.win.idx)
             elif char.upper() == 'H':  # Print help screen
                 win_help(self.screen, HELP)
                 self.refresh_all()
