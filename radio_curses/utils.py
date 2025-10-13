@@ -95,9 +95,6 @@ class Record:
         self.pos: tuple[int, int] = (0, 0)  # position: (cur, idx)
 
     def add_dict(self, d: dict) -> Record:
-        if (url := d.get('URL')) and url.startswith('http://'):
-            url = f'{url[:4]}s{url[4:]}'  # https://
-            d['URL'] = url
         r = Record(d, self)
         self.children.append(r)
         return r
