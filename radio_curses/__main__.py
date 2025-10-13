@@ -44,7 +44,7 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
         self.status_lock = RLock()
         self.thread_meta = None
         self.stop_meta = Event()
-        self.refresh_meta = Event()
+        self.status_str = ''
 
         self.create_windows()
 
@@ -100,8 +100,7 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
 
         self.win.refresh()
 
-        self.win3.refresh()
-        self.refresh_meta.set()
+        self.status(self.status_str, force=True)
 
     def right(self, i: int):
         if not (r := self.get_record(i)):
@@ -122,8 +121,7 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
         self.win.cur, self.win.idx = self.record.pos
         self.win.refresh()
 
-    def poll_metadata(self, stop: Event, refresh: Event):
-        prev_song = None
+    def poll_metadata(self, stop: Event):
         while True:
             if stop.wait(5):
                 return
@@ -134,14 +132,10 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
             song = d2.get('icy-title')
             if song:
                 song = song.rstrip()
-                if prev_song != song or refresh.is_set():
-                    prev_song = song
-                    self.status(f'{self.radio}: {song}')
-                    refresh.clear()
-            elif refresh.is_set():
-                prev_song = None
-                self.status(f'{self.radio}')
-                refresh.clear()
+                s = f'{self.radio}: {song}'
+            else:
+                s = f'{self.radio}'
+            self.status(s)
 
     def start_player(self, i: int):
         if not (r := self.get_record(i)):
@@ -152,7 +146,7 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
             self.status(f'Start {self.radio} ...')
             self.mpv.start(r.d['URL'])
             if not self.thread_meta:
-                self.thread_meta = Thread(target=self.poll_metadata, args=(self.stop_meta, self.refresh_meta))
+                self.thread_meta = Thread(target=self.poll_metadata, args=(self.stop_meta,))
                 self.thread_meta.start()
 
     def record_move_up(self, i: int) -> bool:
@@ -173,11 +167,13 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
         del self.fav[i]
         self.win.refresh()
 
-    def status(self, s: str):
-        with self.status_lock:
-            self.win3.erase()
-            win_addstr(self.win3, 0, 1, s)
-            self.win3.refresh()
+    def status(self, s: str, force=False):
+        if force or self.status_str != s:
+            with self.status_lock:
+                self.win3.erase()
+                win_addstr(self.win3, 0, 1, s)
+                self.win3.refresh()
+                self.status_str = s
 
     def shutdown(self, *_):
         self.status('Closing ...')
