@@ -10,6 +10,8 @@ It is designed to use the *tunein* directory found at `opml.radiotime.com`_, but
 
 Audio playback uses `mpv`_. radio-curses requires `python3` and the libraries `requests`_, `lxml`_ and `xdg-base-dirs`_.
 
+|demo|
+
 The current hotkeys are:
     * h: help screen
     * q, Esc: Quit the program
@@ -28,6 +30,9 @@ The current hotkeys are:
           :target: https://pypi.org/project/radio-curses/
 .. |github| image:: https://badgen.net/github/tag/shamilbi/radio-curses?label=github
             :target: https://github.com/shamilbi/radio-curses/
+.. |demo| image:: https://asciinema.org/a/NB9Gn8NcN3tKxB28ue86KJLmW.png
+          :target: https://asciinema.org/a/NB9Gn8NcN3tKxB28ue86KJLmW?autoplay=1
+          :width: 100%
 .. _curseradio: https://github.com/chronitis/curseradio
 .. _OPML: https://en.wikipedia.org/wiki/OPML
 .. _opml.radiotime.com: https://opml.radiotime.com/
