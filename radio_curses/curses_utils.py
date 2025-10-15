@@ -150,6 +150,9 @@ class List:
             rows, _ = self.win.getmaxyx()
             if not self.idx < len_:  # deleted
                 self.idx = len_ - 1
+            if (rows - self.cur) > (di := len_ - self.idx):
+                # gap at bottom
+                self.cur = rows - di
             self.cur = min(self.cur, self.idx)
             for i in range(rows):
                 idx = self.idx - self.cur + i
