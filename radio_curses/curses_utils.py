@@ -342,6 +342,9 @@ class App:
         self.refresh_all()
 
     def shutdown(self, *_):
+        if curses.isendwin():
+            # return to curses
+            self.screen.refresh()
         sys.exit(0)
 
     def create_windows(self):
