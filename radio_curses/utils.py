@@ -85,7 +85,7 @@ def socket2json(s: socket.socket) -> dict:
                     break
             response = fp.getvalue().decode('utf-8')
             return json.loads(response)
-    except ConnectionResetError:
+    except (ConnectionResetError, json.JSONDecodeError):
         return {}
 
 
