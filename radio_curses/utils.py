@@ -76,14 +76,17 @@ class Mpv:
 
 
 def socket2json(s: socket.socket) -> dict:
-    with io.BytesIO() as fp:
-        while True:
-            resp = s.recv(1024)
-            fp.write(resp)
-            if resp.endswith(b'\n'):
-                break
-        response = fp.getvalue().decode('utf-8')
-        return json.loads(response)
+    try:
+        with io.BytesIO() as fp:
+            while True:
+                resp = s.recv(1024)
+                fp.write(resp)
+                if resp.endswith(b'\n'):
+                    break
+            response = fp.getvalue().decode('utf-8')
+            return json.loads(response)
+    except ConnectionResetError:
+        return {}
 
 
 class Record:
