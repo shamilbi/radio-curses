@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import json
 import os
 import shutil
@@ -77,16 +76,24 @@ class Mpv:
 
 def socket2json(s: socket.socket) -> dict:
     try:
-        with io.BytesIO() as fp:
-            while True:
-                resp = s.recv(1024)
-                fp.write(resp)
-                if resp.endswith(b'\n'):
-                    break
-            response = fp.getvalue().decode('utf-8')
-            return json.loads(response)
+        with s.makefile(encoding='utf-8', errors='replace') as fp:
+            return json.loads(fp.readline())
     except (ConnectionResetError, json.JSONDecodeError):
         return {}
+
+
+# def socket2json(s: socket.socket) -> dict:
+#     try:
+#         with io.BytesIO() as fp:
+#             while True:
+#                 resp = s.recv(1024)
+#                 fp.write(resp)
+#                 if resp.endswith(b'\n'):
+#                     break
+#             response = fp.getvalue().decode('utf-8')
+#             return json.loads(response)
+#     except (ConnectionResetError, json.JSONDecodeError):
+#         return {}
 
 
 class Record:
