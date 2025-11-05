@@ -11,7 +11,7 @@ from threading import Event
 
 import requests  # type: ignore[import-untyped]
 from lxml.etree import XML  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
-from lxml.etree import Element, ElementTree, SubElement  # pylint: disable=no-name-in-module
+from lxml.etree import Element, ElementTree, SubElement, XMLSyntaxError  # pylint: disable=no-name-in-module
 from xdg_base_dirs import xdg_data_home
 
 
@@ -174,9 +174,13 @@ def from_url(url: str, r: Record):
     if url.startswith('http://'):
         url = f'{url[:4]}s{url[4:]}'  # https://
     resp = requests.get(url)  # pylint: disable=missing-timeout
-    xml = XML(resp.content)
-    for e in xml.xpath('/opml/body'):
-        from_xml(e, r)
+    try:
+        xml = XML(resp.content)
+        for e in xml.xpath('/opml/body'):
+            from_xml(e, r)
+    except XMLSyntaxError:
+        # bad response from url
+        r.children.clear()
 
 
 def from_file(file: Path, r: Record):
