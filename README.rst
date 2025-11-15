@@ -28,7 +28,7 @@ The current hotkeys are:
 
 .. |pypi| image:: https://img.shields.io/pypi/v/radio-curses
           :target: https://pypi.org/project/radio-curses/
-.. |github| image:: https://img.shields.io/github/v/tag/shamilbi/radio-curses
+.. |github| image:: https://img.shields.io/github/v/tag/shamilbi/radio-curses?label=github
             :target: https://github.com/shamilbi/radio-curses/
 .. |demo| image:: https://asciinema.org/a/NB9Gn8NcN3tKxB28ue86KJLmW.png
           :target: https://asciinema.org/a/NB9Gn8NcN3tKxB28ue86KJLmW?autoplay=1
