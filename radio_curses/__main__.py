@@ -7,7 +7,8 @@ from threading import Event, RLock, Thread
 
 from . import __version__
 from .curses_utils import App, List2, ListProto2, win_addstr, win_help
-from .utils import Favourites, Mpv, Record, from_url
+from .db import Favourites, Record, from_url
+from .utils import Mpv
 
 HELP = [
     ("h", "This help screen"),
