@@ -25,6 +25,7 @@ The current hotkeys are:
     * Insert: Add to Favourites
     * Delete: Delete from Favourites
     * Enter: Play audio
+    * Ctrl-L: Copy URL to clipboard
 
 .. |pypi| image:: https://img.shields.io/pypi/v/radio-curses
           :target: https://pypi.org/project/radio-curses/
