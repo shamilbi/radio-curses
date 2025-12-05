@@ -9,7 +9,7 @@ from . import __version__
 from .curses_utils import App, win_addstr, win_help
 from .curses_utils.list1m import List1m, ListProto1m
 from .db import Favourites, Record, from_url
-from .utils import Mpv
+from .utils import Mpv, str2clipboard
 
 HELP = [
     ("h", "This help screen"),
@@ -25,6 +25,7 @@ HELP = [
     ("Insert", "Add to Favourites"),
     ("Delete", "Delete from Favourites"),
     ("Enter", "Play audio"),
+    ("Ctrl-L", "Copy URL to clipboard"),
 ]
 
 
@@ -169,6 +170,15 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         del self.fav[i]
         self.win.refresh()
 
+    def url2clipboard(self):
+        if not (r := self.get_record(self.win.idx)):
+            return
+        if url := r.d.get('URL', None):
+            str2clipboard(url)
+            self.status(f'URL copied: {url}')
+        else:
+            self.status('URL is empty')
+
     def status(self, s: str, force=False):
         if force or self.status_str != s:
             with self.status_lock:
@@ -209,6 +219,8 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
             elif char.upper() == 'H':  # Print help screen
                 win_help(self.screen, HELP)
                 self.refresh_all()
+            elif char_ord == 12:  # ^L
+                self.url2clipboard()
 
 
 def main2(screen):
