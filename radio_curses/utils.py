@@ -6,6 +6,7 @@ import shutil
 import socket
 import subprocess
 from contextlib import contextmanager
+from subprocess import PIPE, Popen
 from threading import Event
 
 
@@ -74,3 +75,8 @@ def socket2json(s: socket.socket) -> dict:
             return json.loads(fp.readline())
     except (ConnectionResetError, json.JSONDecodeError):
         return {}
+
+
+def str2clipboard(s: str):
+    with Popen(['xsel', '-b', '-i'], stdout=PIPE, stdin=PIPE, stderr=PIPE, text=True) as p:
+        p.communicate(input=s)
