@@ -6,7 +6,8 @@ import sys
 from threading import Event, RLock, Thread
 
 from . import __version__
-from .curses_utils import App, List2, ListProto2, win_addstr, win_help
+from .curses_utils import App, win_addstr, win_help
+from .curses_utils.list1m import List1m, ListProto1m
 from .db import Favourites, Record, from_url
 from .utils import Mpv
 
@@ -27,7 +28,7 @@ HELP = [
 ]
 
 
-class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too-many-public-methods
+class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, screen):
         super().__init__(screen)
 
@@ -62,7 +63,7 @@ class Main(App, ListProto2):  # pylint: disable=too-many-instance-attributes,too
         rows, cols = (maxy - 4, maxx - 2)
 
         win = self.screen.derwin(rows, cols, 2, 1)
-        self.win = List2(win, self, current_color=curses.color_pair(1) | curses.A_BOLD)
+        self.win = List1m(win, self, current_color=curses.color_pair(1) | curses.A_BOLD)
 
         # status
         self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
