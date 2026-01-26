@@ -24,7 +24,8 @@ HELP = [
     ("Shift-{Up,Down}", "Move a record up/down"),
     ("Insert", "Add to Favourites"),
     ("Delete", "Delete from Favourites"),
-    ("Enter", "Play audio"),
+    ("Enter", "Play selected radio"),
+    ("Space", "Stop/Resume"),
     ("Ctrl-L", "Copy URL to clipboard"),
 ]
 
@@ -212,6 +213,12 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
                 self.left()
             elif char_ord == curses.ascii.LF:  # Enter
                 self.start_player(self.win.idx)
+            elif char_ord == curses.ascii.SP:  # Space
+                rt = self.mpv.toggle()
+                if rt > 0:
+                    self.status(f'Start {self.radio} ...')
+                elif rt < 0:
+                    self.status(f'Stop {self.radio} ...')
             elif char_ord == curses.KEY_IC:  # insert
                 self.add_to_favourites(self.win.idx)
             elif char_ord == curses.KEY_DC:  # delete
