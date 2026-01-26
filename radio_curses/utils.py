@@ -10,6 +10,10 @@ from subprocess import PIPE, Popen
 from threading import Event
 
 
+class RadioException(Exception):
+    pass
+
+
 @contextmanager
 def unix_socket(timeout: float = 2.0):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
