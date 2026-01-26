@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import curses
 import curses.ascii
+import html
 import sys
 from threading import Event, RLock, Thread
 
@@ -9,7 +10,7 @@ from . import __version__
 from .curses_utils import App, win_addstr, win_help
 from .curses_utils.list1m import List1m, ListProto1m
 from .db import Favourites, Record, from_url
-from .utils import Mpv, str2clipboard
+from .utils import Mpv, RadioException, str2clipboard
 
 HELP = [
     ("h", "This help screen"),
@@ -29,6 +30,8 @@ HELP = [
     ("Ctrl-L", "Copy URL to clipboard"),
 ]
 
+OPML_URL = 'https://opml.radiotime.com/'
+
 
 class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, screen):
@@ -40,7 +43,6 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         self.fav = Favourites(self.record)
         self.fav.load_from_home()
         self.record.children.append(self.fav)
-        from_url('https://opml.radiotime.com/', self.record)
 
         self.mpv = Mpv()
         self.radio = ''
@@ -51,6 +53,20 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         self.status_str = ''
 
         self.create_windows()
+
+    def from_url(self, url: str, r: Record) -> bool:
+        try:
+            from_url(url, r)
+            return True
+        except RadioException as e:
+            self.status(f'Error: {e}')
+            return False
+
+    def load_opml(self):
+        self.status(f'Load OPML: {OPML_URL} ...')
+        if self.from_url(OPML_URL, self.record):
+            self.status('OK')
+        self.refresh_all()
 
     def create_windows(self):
         '''
@@ -113,7 +129,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         if r.isdir():
             self.record = r
             if not self.record.children and 'URL' in r.d:
-                from_url(r.d['URL'], self.record)
+                self.from_url(r.d['URL'], self.record)
             self.win.cur, self.win.idx = self.record.pos
             self.win.refresh()
 
@@ -136,6 +152,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
             song = d2.get('icy-title')
             if song:
                 song = song.rstrip()
+                song = html.unescape(song)
                 s = f'{self.radio}: {song}'
             else:
                 s = f'{self.radio}'
@@ -199,6 +216,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
 
     def run(self):
         self.refresh_all()
+        self.load_opml()
         self.input_loop()
 
     def input_loop(self):  # pylint: disable=too-many-branches,too-many-statements
