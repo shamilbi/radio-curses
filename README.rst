@@ -24,7 +24,8 @@ The current hotkeys are:
     * Shift-Up,Down: Move a record up/down
     * Insert: Add to Favourites
     * Delete: Delete from Favourites
-    * Enter: Play audio
+    * Enter: Play selected radio
+    * Space: Stop/Resume
     * Ctrl-L: Copy URL to clipboard
 
 .. |pypi| image:: https://img.shields.io/pypi/v/radio-curses
