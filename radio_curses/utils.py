@@ -26,6 +26,7 @@ class Mpv:
         mpv = shutil.which('mpv') or '/usr/bin/mpv'
         self.cmd = [mpv, '--terminal=no', f'--input-ipc-server={self.socket}']
         self.proc = None
+        self.url = None
 
     def stop(self):
         if self.proc is not None:
@@ -36,6 +37,8 @@ class Mpv:
         self.proc = None
 
     def start(self, url: str):
+        if not url:
+            return
         self.stop()
         if url.startswith('http://'):
             url = f'{url[:4]}s{url[4:]}'  # https://
@@ -43,6 +46,18 @@ class Mpv:
         self.proc = subprocess.Popen(  # pylint: disable=consider-using-with
             cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL
         )
+        self.url = url
+
+    def toggle(self) -> int:
+        # -1: stop, 0: nothing, 1: start
+        rt = 0
+        if self.proc:
+            self.stop()
+            rt = -1
+        elif self.url:
+            self.start(self.url)
+            rt = 1
+        return rt
 
     def send_command(self, cmd: dict, stop: Event) -> dict:
         with unix_socket() as client:
