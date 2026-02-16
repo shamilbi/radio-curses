@@ -3,6 +3,7 @@ from __future__ import annotations
 import curses
 import curses.ascii
 import html
+import os
 import sys
 from threading import Event, RLock, Thread
 
@@ -109,6 +110,9 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         self.screen.erase()
 
         s = f'radio-curses v{__version__} (h - Help)'
+        proxy = os.environ['http_proxy'] or os.environ['https_proxy'] or ''
+        if proxy:
+            s += f' {proxy=}'
         win_addstr(self.screen, 0, 1, s)
         self.screen.refresh()
 
