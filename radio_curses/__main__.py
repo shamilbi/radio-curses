@@ -110,7 +110,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         self.screen.erase()
 
         s = f'radio-curses v{__version__} (h - Help)'
-        proxy = os.environ['http_proxy'] or os.environ['https_proxy'] or ''
+        proxy = os.environ.get('http_proxy') or os.environ.get('https_proxy')
         if proxy:
             s += f' {proxy=}'
         win_addstr(self.screen, 0, 1, s)
