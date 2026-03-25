@@ -7,7 +7,9 @@ import socket
 import subprocess
 from contextlib import contextmanager
 from subprocess import PIPE, Popen
-from threading import Event
+from threading import Event, RLock
+
+import requests
 
 
 class RadioException(Exception):
@@ -99,3 +101,42 @@ def socket2json(s: socket.socket) -> dict:
 def str2clipboard(s: str):
     with Popen(['xsel', '-b', '-i'], stdout=PIPE, stdin=PIPE, stderr=PIPE, text=True) as p:
         p.communicate(input=s)
+
+
+class ThreadStr:
+    'str between threads'
+
+    def __init__(self, lock: RLock):
+        self.lock = lock
+        self.value = ''
+
+    def get(self) -> str:
+        with self.lock:
+            return self.value
+
+    def set(self, value: str) -> bool:
+        with self.lock:
+            if self.value != value:
+                self.value = value
+                return True
+        return False
+
+
+LYRICS_URL = 'https://lrclib.net/api/search'  # /api/search?q=still+alive+portal
+SKIP_WORDS = {'-', ':', '+'}
+
+
+def search_lyrics(song: str) -> str | None:
+    if song:
+        filter1 = (s for s in song.replace('/', ' ').split())
+        filter2 = (s for s in filter1 if s and s not in SKIP_WORDS)
+        search = '+'.join(filter2)
+        if search:
+            resp = requests.get(LYRICS_URL, params={'q': search}, timeout=5)
+            resp.raise_for_status()
+            l: list[dict] = resp.json()
+            if l:
+                d = l[0]
+                if lyrics := d.get('plainLyrics'):
+                    return lyrics
+    return None
