@@ -156,7 +156,9 @@ class App:
         finally:
             self.screen.nodelay(False)
         if ch == -1:
-            self.shutdown()
+            # https://docs.python.org/3/library/curses.html#curses.window.getch
+            # In no-delay mode, return -1 if there is no input, otherwise wait until a key is pressed
+            return
         self.handle_alt_key(ch)
 
     def getch(self) -> Generator[int, None, None]:
@@ -206,5 +208,8 @@ def escape2terminal(app: App):
 
 def input_search(app: App, prompt: str) -> tuple[bool, str]:  # ok, search str
     with escape2terminal(app):
-        return (True, input(prompt))
+        try:
+            return (True, input(prompt))
+        except KeyboardInterrupt:
+            pass
     return (False, '')
