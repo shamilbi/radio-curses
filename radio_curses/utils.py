@@ -12,6 +12,8 @@ from threading import Event, RLock
 import requests
 from requests.exceptions import ReadTimeout
 
+from . import __homepage__, __project_name__, __version__
+
 
 class RadioException(Exception):
     pass
@@ -124,17 +126,26 @@ class ThreadStr:
 
 
 LYRICS_URL = 'https://lrclib.net/api/search'  # /api/search?q=still+alive+portal
-SKIP_WORDS = {'-', ':', '+'}
+DEL_PREFIXES = ('Now Playing: ',)
+REPLACE2SPACE = ('_', '/', '-', ':', '+', '(', ')', '!', 'feat.')
+USER_AGENT = f'{__project_name__} v{__version__} ({__homepage__})'
 
 
 def search_lyrics(song: str) -> str | None:
     if song:
-        filter1 = (s for s in song.replace('/', ' ').split())
-        filter2 = (s for s in filter1 if s and s not in SKIP_WORDS)
-        search = '+'.join(filter2)
+        for i in DEL_PREFIXES:
+            song = song.removeprefix(i)
+        for i in REPLACE2SPACE:
+            song = song.replace(i, ' ')
+        search = '+'.join(song.split())
         if search:
             try:
-                resp = requests.get(LYRICS_URL, params={'q': search}, timeout=5)
+                resp = requests.get(
+                    LYRICS_URL,
+                    headers={'User-Agent': USER_AGENT},
+                    params={'q': search},
+                    timeout=5,
+                )
             except ReadTimeout:
                 return None
             resp.raise_for_status()
@@ -142,5 +153,9 @@ def search_lyrics(song: str) -> str | None:
             if l:
                 d = l[0]
                 if lyrics := d.get('plainLyrics'):
+                    a = d.get('artistName')
+                    t = d.get('trackName')
+                    if a and t:
+                        lyrics = f'{a} - {t}\n\n{lyrics}'
                     return lyrics
     return None
