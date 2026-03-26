@@ -10,6 +10,7 @@ from subprocess import PIPE, Popen
 from threading import Event, RLock
 
 import requests
+from requests.exceptions import ReadTimeout
 
 
 class RadioException(Exception):
@@ -132,7 +133,10 @@ def search_lyrics(song: str) -> str | None:
         filter2 = (s for s in filter1 if s and s not in SKIP_WORDS)
         search = '+'.join(filter2)
         if search:
-            resp = requests.get(LYRICS_URL, params={'q': search}, timeout=5)
+            try:
+                resp = requests.get(LYRICS_URL, params={'q': search}, timeout=5)
+            except ReadTimeout:
+                return None
             resp.raise_for_status()
             l: list[dict] = resp.json()
             if l:
