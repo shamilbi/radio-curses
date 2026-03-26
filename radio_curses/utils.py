@@ -127,7 +127,7 @@ class ThreadStr:
 
 LYRICS_URL = 'https://lrclib.net/api/search'  # /api/search?q=still+alive+portal
 DEL_PREFIXES = ('Now Playing: ',)
-REPLACE2SPACE = ('_', '/', '-', ':', '+', '(', ')', '!', 'feat.')
+REPLACE2SPACE = ('_', '/', '-', ':', '+', '(', ')', '!')
 USER_AGENT = f'{__project_name__} v{__version__} ({__homepage__})'
 
 
