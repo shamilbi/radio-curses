@@ -4,14 +4,17 @@ import curses
 import curses.ascii
 import html
 import os
+import shutil
+import subprocess
 import sys
+import webbrowser
 from threading import Event, RLock, Thread
 
 from . import __version__
 from .curses_utils import App, win_addstr, win_help
 from .curses_utils.list1m import List1m, ListProto1m
 from .db import Favourites, Record, from_url
-from .utils import Mpv, RadioException, ThreadStr, search_lyrics, str2clipboard
+from .utils import Mpv, RadioException, ThreadStr, search_words_url, str2clipboard
 
 HELP = [
     ("h", "This help screen"),
@@ -28,8 +31,8 @@ HELP = [
     ("Delete", "Delete from Favourites"),
     ("Enter", "Play selected radio"),
     ("Space", "Stop/Resume"),
+    ("L", "Search lyrics in browser"),
     ("Ctrl-U", "Copy URL to clipboard"),
-    ("Ctrl-L", "Copy lyrics to clipboard"),
 ]
 
 OPML_URL = 'https://opml.radiotime.com/'
@@ -204,14 +207,19 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         else:
             self.status('URL is empty')
 
-    def show_lyrics(self):
+    def search_lyrics(self):
         song = self.song.get()
         if not song:
             return
-        lyrics = search_lyrics(song)
-        if lyrics:
-            str2clipboard(lyrics)
-            self.status('lyrics copied to clipboard')
+        if not (url := search_words_url(song)):
+            return
+        try:
+            if shutil.which("xdg-open"):
+                subprocess.run(['xdg-open', url], check=False)
+            else:
+                webbrowser.open(url)
+        except ImportError:
+            self.status(f'Could not load python module "webbrowser" for {url=}')
 
     def status(self, s: str, force=False):
         if curses.isendwin():
@@ -262,10 +270,10 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
             elif char.upper() == 'H':  # Print help screen
                 win_help(self.screen, HELP)
                 self.refresh_all()
+            elif char == 'L':
+                self.search_lyrics()
             elif char_ord == 21:  # ^U
                 self.url2clipboard()
-            elif char_ord == 12:  # ^L
-                self.show_lyrics()
 
 
 def main2(screen):
