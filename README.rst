@@ -28,8 +28,8 @@ The current hotkeys are:
     * Delete: Delete from Favourites
     * Enter: Play selected radio
     * Space: Stop/Resume
+    * L: Search lyrics in browser
     * Ctrl-U: Copy URL to clipboard
-    * Ctrl-L: Copy lyrics to clipboard
 
 .. |pypi| image:: https://img.shields.io/pypi/v/radio-curses
           :target: https://pypi.org/project/radio-curses/
@@ -45,4 +45,4 @@ The current hotkeys are:
 .. _requests: https://pypi.org/project/requests/
 .. _lxml: https://pypi.org/project/lxml/
 .. _xdg-base-dirs: https://pypi.org/project/xdg-base-dirs/
-.. _lrclib.net: https://lrclib.net/docs
+.. _lrclib.net: https://lrclib.net/
