@@ -9,11 +9,6 @@ from contextlib import contextmanager
 from subprocess import PIPE, Popen
 from threading import Event, RLock
 
-import requests
-from requests.exceptions import ReadTimeout
-
-from . import __homepage__, __project_name__, __version__
-
 
 class RadioException(Exception):
     pass
@@ -125,37 +120,23 @@ class ThreadStr:
         return False
 
 
-LYRICS_URL = 'https://lrclib.net/api/search'  # /api/search?q=still+alive+portal
+LYRICS_SEARCH_URL = 'https://lrclib.net/search'
 DEL_PREFIXES = ('Now Playing: ',)
 REPLACE2SPACE = ('_', '/', '-', ':', '+', '(', ')', '!')
-USER_AGENT = f'{__project_name__} v{__version__} ({__homepage__})'
 
 
-def search_lyrics(song: str) -> str | None:
+def search_words(song: str) -> list[str] | None:
     if song:
         for i in DEL_PREFIXES:
             song = song.removeprefix(i)
         for i in REPLACE2SPACE:
             song = song.replace(i, ' ')
-        search = '+'.join(song.split())
-        if search:
-            try:
-                resp = requests.get(
-                    LYRICS_URL,
-                    headers={'User-Agent': USER_AGENT},
-                    params={'q': search},
-                    timeout=5,
-                )
-            except ReadTimeout:
-                return None
-            resp.raise_for_status()
-            l: list[dict] = resp.json()
-            if l:
-                d = l[0]
-                if lyrics := d.get('plainLyrics'):
-                    a = d.get('artistName')
-                    t = d.get('trackName')
-                    if a and t:
-                        lyrics = f'{a} - {t}\n\n{lyrics}'
-                    return lyrics
+        return song.split()
     return None
+
+
+def search_words_url(song: str) -> str | None:
+    if not (words := search_words(song)):
+        return None
+    s = ' '.join(words)
+    return f'{LYRICS_SEARCH_URL}/{s}'
