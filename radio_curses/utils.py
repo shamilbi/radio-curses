@@ -120,7 +120,7 @@ class ThreadStr:
         return False
 
 
-LYRICS_SEARCH_URL = 'https://lrclib.net/search'
+LYRICS_SEARCH_URL = 'https://duckduckgo.com/?q=lyrics '
 DEL_PREFIXES = ('Now Playing: ',)
 REPLACE2SPACE = ('_', '/', '-', ':', '+', '(', ')', '!')
 
@@ -139,4 +139,4 @@ def search_words_url(song: str) -> str | None:
     if not (words := search_words(song)):
         return None
     s = ' '.join(words)
-    return f'{LYRICS_SEARCH_URL}/{s}'
+    return f'{LYRICS_SEARCH_URL}{s}'
