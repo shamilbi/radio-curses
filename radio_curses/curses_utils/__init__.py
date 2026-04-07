@@ -2,6 +2,7 @@ import curses
 import curses.ascii
 import os
 import sys
+from collections.abc import Callable
 from contextlib import contextmanager
 from signal import SIGINT, SIGTERM, SIGWINCH, signal
 from typing import Generator
@@ -219,3 +220,15 @@ def set_terminal_title(title: str):
     # https://stackoverflow.com/questions/23388262/is-there-a-way-to-change-the-terminal-title-with-curses
     sys.stdout.write(f"\x1b]2;{title}\x07")
     sys.stdout.flush()
+
+
+def start_curses_app(
+    main: Callable[[curses.window], None],
+    app_name: str,
+    version: str,
+):
+    try:
+        set_terminal_title(f'{app_name} v{version}')
+        curses.wrapper(main)
+    finally:
+        set_terminal_title('')  # reset terminal title
