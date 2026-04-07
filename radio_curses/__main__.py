@@ -11,7 +11,7 @@ import webbrowser
 from threading import Event, RLock, Thread
 
 from . import __version__
-from .curses_utils import App, win_addstr, win_help
+from .curses_utils import App, set_terminal_title, win_addstr, win_help
 from .curses_utils.list1m import List1m, ListProto1m
 from .db import Favourites, Record, from_url
 from .utils import Mpv, RadioException, ThreadStr, search_words_url, str2clipboard
@@ -277,6 +277,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
 
 
 def main2(screen):
+    set_terminal_title(f'radio-curses v{__version__}')
     app = Main(screen)
     app.run()
 
