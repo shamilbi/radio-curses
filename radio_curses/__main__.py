@@ -10,8 +10,8 @@ import sys
 import webbrowser
 from threading import Event, RLock, Thread
 
-from . import __version__
-from .curses_utils import App, set_terminal_title, win_addstr, win_help
+from . import __project_name__, __version__
+from .curses_utils import App, start_curses_app, win_addstr, win_help
 from .curses_utils.list1m import List1m, ListProto1m
 from .db import Favourites, Record, from_url
 from .utils import Mpv, RadioException, ThreadStr, search_words_url, str2clipboard
@@ -114,7 +114,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
     def refresh_all(self):
         self.screen.erase()
 
-        s = f'radio-curses v{__version__} (h - Help)'
+        s = f'{__project_name__} v{__version__} (h - Help)'
         proxy = os.environ.get('http_proxy') or os.environ.get('https_proxy')
         if proxy:
             s += f' {proxy=}'
@@ -282,8 +282,7 @@ def main2(screen):
 
 
 def main():
-    set_terminal_title(f'radio-curses v{__version__}')
-    curses.wrapper(main2)
+    start_curses_app(main2, __project_name__, __version__)
 
 
 if __name__ == '__main__':
