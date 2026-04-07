@@ -277,12 +277,12 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
 
 
 def main2(screen):
-    set_terminal_title(f'radio-curses v{__version__}')
     app = Main(screen)
     app.run()
 
 
 def main():
+    set_terminal_title(f'radio-curses v{__version__}')
     curses.wrapper(main2)
 
 
