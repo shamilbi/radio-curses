@@ -217,4 +217,4 @@ def input_search(app: App, prompt: str) -> tuple[bool, str]:  # ok, search str
 
 def set_terminal_title(title: str):
     # https://stackoverflow.com/questions/23388262/is-there-a-way-to-change-the-terminal-title-with-curses
-    sys.stdout.write(f"\x1b]2;{title}\x07")
+    sys.stdout.write(f"\x1b]2;{title}\x07\n")
