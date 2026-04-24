@@ -114,7 +114,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
     def refresh_all(self):
         self.screen.erase()
 
-        s = f'{__project_name__} v{__version__} (h - Help)'
+        s = f'{__project_name__} v{__version__} (F1 - Help)'
         proxy = os.environ.get('http_proxy') or os.environ.get('https_proxy')
         if proxy:
             s += f' {proxy=}'
