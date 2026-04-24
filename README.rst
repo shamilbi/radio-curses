@@ -15,7 +15,7 @@ radio-curses requires `python3` and the libraries `requests`_, `lxml`_ and `xdg-
 |demo|
 
 The current hotkeys are:
-    * h: help screen
+    * F1: help screen
     * q, Esc: Quit the program
     * j, Down: Move selection down
     * k, Up: Move selection up
