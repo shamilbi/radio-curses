@@ -17,7 +17,7 @@ from .db import Favourites, Record, from_url
 from .utils import Mpv, RadioException, ThreadStr, search_words_url, str2clipboard
 
 HELP = [
-    ("h", "This help screen"),
+    ("F1", "This help screen"),
     ("q, Esc", "Quit the program"),
     ("j, Down", "Move selection down"),
     ("k, Up", "Move selection up"),
@@ -267,7 +267,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
                 self.add_to_favourites(self.win.idx)
             elif char_ord == curses.KEY_DC:  # delete
                 self.del_favourite(self.win.idx)
-            elif char.upper() == 'H':  # Print help screen
+            elif char_ord == curses.KEY_F1:
                 win_help(self.screen, HELP)
                 self.refresh_all()
             elif char == 'L':
