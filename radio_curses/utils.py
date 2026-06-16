@@ -120,7 +120,9 @@ class ThreadStr:
         return False
 
 
-LYRICS_SEARCH_URL = 'https://duckduckgo.com/?q=lyrics '
+# LYRICS_SEARCH_URL = 'https://duckduckgo.com/?q=lyrics '
+# LYRICS_SEARCH_URL = 'https://www.mojeek.com/search?q=lyrics '
+LYRICS_SEARCH_URL = 'https://genius.com/search?q='
 DEL_PREFIXES = ('Now Playing: ',)
 REPLACE2SPACE = ('_', '/', '-', ':', '+', '(', ')', '!')
 
