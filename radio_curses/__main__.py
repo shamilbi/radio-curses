@@ -11,8 +11,10 @@ import webbrowser
 from threading import Event, RLock, Thread
 
 from . import __project_name__, __version__
-from .curses_utils import App, start_curses_app, win_addstr, win_help
+from .curses_utils.app import App, start_curses_app
 from .curses_utils.list1m import List1m, ListProto1m
+from .curses_utils.text import win_help
+from .curses_utils.win import win_addstr
 from .db import Favourites, Record, from_url
 from .utils import Mpv, RadioException, ThreadStr, search_words_url, str2clipboard
 
