@@ -14,7 +14,8 @@ requires-python = ">=3.9"
 dependencies = [
     'lxml',
     'requests',
-    'xdg-base-dirs'
+    'xdg-base-dirs',
+    'curses-utils2',
 ]
 
 dynamic = ["version"]
@@ -80,8 +81,11 @@ main.persistent = false
 
 [tool.isort]
 line_length = 120
+profile = "black"
 
-[tool.ruff.lint]
-ignore = [
+[tool.ruff]
+line-length = 120
+lint.ignore = [
     "E741",  # Ambiguous variable name: `l`
 ]
+format.quote-style = "preserve"
