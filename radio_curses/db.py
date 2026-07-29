@@ -3,8 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import requests  # type: ignore[import-untyped]
-from lxml.etree import XML  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
-from lxml.etree import Element, ElementTree, SubElement, XMLSyntaxError  # pylint: disable=no-name-in-module
+
+# pylint: disable=no-name-in-module
+from lxml.etree import (  # type: ignore[import-untyped]
+    XML,
+    Element,
+    ElementTree,
+    SubElement,
+    XMLSyntaxError,
+)
 from xdg_base_dirs import xdg_data_home
 
 from .utils import RadioException
@@ -28,16 +35,12 @@ class Record:
             return True
         if 'URL' not in self.d:
             return True
-        if self.d.get('type') == 'link':
-            return True
-        return False
+        return self.d.get('type') == 'link'
 
     def isaudio(self) -> bool:
         if self.isdir():
             return False
-        if self.d.get('type') == 'audio' and 'URL' in self.d:
-            return True
-        return False
+        return self.d.get('type') == 'audio' and 'URL' in self.d
 
     def __len__(self):
         return len(self.children)
