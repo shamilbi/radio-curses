@@ -41,7 +41,9 @@ HELP = [
 OPML_URL = 'https://opml.radiotime.com/'
 
 
-class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,too-many-public-methods
+class Main(App, ListProto1m):
+    # pylint: disable=too-many-instance-attributes,too-many-public-methods
+    # pylint: disable=attribute-defined-outside-init
     def __init__(self, screen):
         super().__init__(screen)
 
@@ -60,8 +62,6 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
         self.thread_meta = None
         self.stop_meta = Event()
         self.status_str = ''
-
-        self.create_windows()
 
     def from_url(self, url: str, r: Record) -> bool:
         try:
@@ -116,6 +116,7 @@ class Main(App, ListProto1m):  # pylint: disable=too-many-instance-attributes,to
 
     def refresh_all(self):
         self.screen.erase()
+        self.create_windows()
 
         s = f'{__project_name__} v{__version__} (F1 - Help)'
         proxy = os.environ.get('http_proxy') or os.environ.get('https_proxy')
