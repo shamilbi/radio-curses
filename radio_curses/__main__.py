@@ -63,6 +63,9 @@ class Main(App, ListProto1m):
         self.stop_meta = Event()
         self.status_str = ''
 
+        self.win = List1m(self, current_color=curses.color_pair(1) | curses.A_BOLD)
+        self.create_windows()
+
     def from_url(self, url: str, r: Record) -> bool:
         try:
             from_url(url, r)
@@ -89,8 +92,10 @@ class Main(App, ListProto1m):
 
         rows, cols = (maxy - 4, maxx - 2)
 
+        self.list_header = self.screen.derwin(maxy - 2, maxx, 1, 0)
+
         win = self.screen.derwin(rows, cols, 2, 1)
-        self.win = List1m(win, self, current_color=curses.color_pair(1) | curses.A_BOLD)
+        self.win.set_win(win)
 
         # status
         self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
@@ -116,7 +121,6 @@ class Main(App, ListProto1m):
 
     def refresh_all(self):
         self.screen.erase()
-        self.create_windows()
 
         s = f'{__project_name__} v{__version__} (F1 - Help)'
         proxy = os.environ.get('http_proxy') or os.environ.get('https_proxy')
@@ -125,11 +129,9 @@ class Main(App, ListProto1m):
         win_addstr(self.screen, 0, 1, s)
         self.screen.refresh()
 
-        maxy, maxx = self.screen_size
-        win = self.screen.derwin(maxy - 2, maxx, 1, 0)
-        win.erase()
-        win.box()
-        win.refresh()
+        self.list_header.erase()
+        self.list_header.box()
+        self.list_header.refresh()
 
         self.win.refresh()
 
