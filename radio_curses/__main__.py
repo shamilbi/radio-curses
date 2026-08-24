@@ -12,6 +12,7 @@ from threading import Event, RLock, Thread
 
 from curses_utils2.app import App, start_curses_app
 from curses_utils2.list1m import List1m, ListProto1m
+from curses_utils2.listbox import ListBox
 from curses_utils2.text import win_help
 from curses_utils2.win import win_addstr
 
@@ -64,6 +65,7 @@ class Main(App, ListProto1m):
         self.status_str = ''
 
         self.win = List1m(self, current_color=curses.color_pair(1) | curses.A_BOLD)
+        self.listbox = ListBox(self.win, header=0)
         self.create_windows()
 
     def from_url(self, url: str, r: Record) -> bool:
@@ -90,12 +92,8 @@ class Main(App, ListProto1m):
         '''
         maxy, maxx = self.screen_size
 
-        rows, cols = (maxy - 4, maxx - 2)
-
-        self.list_header = self.screen.derwin(maxy - 2, maxx, 1, 0)
-
-        win = self.screen.derwin(rows, cols, 2, 1)
-        self.win.set_win(win)
+        win = self.screen.derwin(maxy - 2, maxx, 1, 0)
+        self.listbox.set_win(win)
 
         # status
         self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
@@ -129,11 +127,7 @@ class Main(App, ListProto1m):
         win_addstr(self.screen, 0, 1, s)
         self.screen.refresh()
 
-        self.list_header.erase()
-        self.list_header.box()
-        self.list_header.refresh()
-
-        self.win.refresh()
+        self.listbox.refresh()
 
         self.status(self.status_str, force=True)
 
