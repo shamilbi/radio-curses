@@ -211,6 +211,7 @@ class Main(App, ListProto1m):
         song = self.song.get()
         if not song:
             return
+        str2clipboard(song)
         if not (url := search_words_url(song)):
             return
         try:
