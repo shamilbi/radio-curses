@@ -14,7 +14,7 @@ requires-python = ">=3.9"
 dependencies = [
     'lxml',
     'requests',
-    'xdg-base-dirs',
+    'platformdirs',
     'curses-utils2',
 ]
 
