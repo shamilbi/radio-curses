@@ -12,7 +12,7 @@ from lxml.etree import (  # type: ignore[import-untyped]
     SubElement,
     XMLSyntaxError,
 )
-from xdg_base_dirs import xdg_data_home
+from platformdirs import user_data_dir
 
 from .utils import RadioException
 
@@ -114,13 +114,13 @@ class Favourites(Record):
 
     def load_from_home(self):
         for i in ('radio-curses', 'curseradio'):
-            file = xdg_data_home() / i / 'favourites.opml'
+            file = Path(user_data_dir(), i, 'favourites.opml')
             if file.is_file():
                 from_file(file, self)
                 return
 
     def save_to_home(self):
-        dir_ = xdg_data_home() / 'radio-curses'
+        dir_ = Path(user_data_dir(), 'radio-curses')
         dir_.mkdir(mode=0o755, exist_ok=True)
         file = dir_ / 'favourites.opml'
 
