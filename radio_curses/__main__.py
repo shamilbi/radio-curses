@@ -11,10 +11,10 @@ import webbrowser
 from threading import Event, RLock, Thread
 
 from curses_utils2.app import App, start_curses_app
-from curses_utils2.list1m import List1m, ListProto1m
-from curses_utils2.listbox import ListBox
+from curses_utils2.list1m_v2 import List1mProto, List1mV2
 from curses_utils2.text import win_help
 from curses_utils2.win import win_addstr
+from curses_utils2.winbox import WinBox
 
 from . import __project_name__, __version__
 from .db import Favourites, Record, from_url
@@ -42,7 +42,32 @@ HELP = [
 OPML_URL = 'https://opml.radiotime.com/'
 
 
-class Main(App, ListProto1m):
+class List1(List1mProto):
+    def __init__(self, app: Main):
+        # pylint: disable=super-init-not-called
+        self.app = app
+
+    def get_record_str(self, i: int) -> str:
+        if not (r := self.app.get_record(i)):
+            return ''
+        if r.isdir():
+            return f'{r.text}/'
+        return r.text
+
+    def records_len(self) -> int:
+        return len(self.app.record)
+
+    def refresh_win_deps(self):
+        pass
+
+    def record_move_up(self, i: int) -> bool:
+        return self.app.record.move_child_up(i)
+
+    def record_move_down(self, i: int) -> bool:
+        return self.app.record.move_child_down(i)
+
+
+class Main(App):
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
     # pylint: disable=attribute-defined-outside-init
     def __init__(self, screen):
@@ -64,8 +89,8 @@ class Main(App, ListProto1m):
         self.stop_meta = Event()
         self.status_str = ''
 
-        self.win = List1m(self, current_color=curses.color_pair(1) | curses.A_BOLD)
-        self.listbox = ListBox(self.win, header=0)
+        self.win = List1mV2(List1(self), current_color=curses.color_pair(1) | curses.A_BOLD)
+        self.listbox = WinBox(self.win)
         self.create_windows()
 
     def from_url(self, url: str, r: Record) -> bool:
@@ -98,38 +123,27 @@ class Main(App, ListProto1m):
         # status
         self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
 
-    def refresh_win_deps(self):
-        pass
-
     def get_record(self, i: int) -> Record | None:
         len_ = len(self.record)
         if not i < len_:
             return None
         return self.record[i]
 
-    def get_record_str(self, i: int) -> str:
-        if not (r := self.get_record(i)):
-            return ''
-        if r.isdir():
-            return f'{r.text}/'
-        return r.text
-
-    def records_len(self) -> int:
-        return len(self.record)
-
     def refresh_all(self):
         self.screen.erase()
+        self.screen.refresh()
 
         s = f'{__project_name__} v{__version__} (F1 - Help)'
         proxy = os.environ.get('http_proxy') or os.environ.get('https_proxy')
         if proxy:
             s += f' {proxy=}'
         win_addstr(self.screen, 0, 1, s)
-        self.screen.refresh()
 
         self.listbox.refresh()
 
         self.status(self.status_str, force=True)
+
+        self.screen.refresh()
 
     def right(self, i: int):
         if not (r := self.get_record(i)):
@@ -179,12 +193,6 @@ class Main(App, ListProto1m):
             if not self.thread_meta:
                 self.thread_meta = Thread(target=self.poll_metadata, args=(self.stop_meta,))
                 self.thread_meta.start()
-
-    def record_move_up(self, i: int) -> bool:
-        return self.record.move_child_up(i)
-
-    def record_move_down(self, i: int) -> bool:
-        return self.record.move_child_down(i)
 
     def add_to_favourites(self, i: int):
         if not (r := self.get_record(i)):
