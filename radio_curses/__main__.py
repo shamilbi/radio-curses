@@ -8,10 +8,11 @@ import shutil
 import subprocess
 import sys
 import webbrowser
+from collections.abc import Generator
 from threading import Event, RLock, Thread
 
 from curses_utils2.app import App, start_curses_app
-from curses_utils2.list1m_v2 import List1mProto, List1mV2
+from curses_utils2.list3m import List3m, List3mProto
 from curses_utils2.text import win_help
 from curses_utils2.win import win_addstr
 from curses_utils2.winbox import WinBox
@@ -42,17 +43,18 @@ HELP = [
 OPML_URL = 'https://opml.radiotime.com/'
 
 
-class List1(List1mProto):
+class List1(List3mProto):
     def __init__(self, app: Main):
         # pylint: disable=super-init-not-called
         self.app = app
 
-    def get_record_str(self, i: int) -> str:
+    def get_record_str(self, i: int) -> Generator[str]:
         if not (r := self.app.get_record(i)):
-            return ''
-        if r.isdir():
-            return f'{r.text}/'
-        return r.text
+            yield ''
+        elif r.isdir():
+            yield f'{r.text}/'
+        else:
+            yield r.text
 
     def records_len(self) -> int:
         return len(self.app.record)
@@ -89,7 +91,7 @@ class Main(App):
         self.stop_meta = Event()
         self.status_str = ''
 
-        self.win = List1mV2(List1(self), current_color=curses.color_pair(1) | curses.A_BOLD)
+        self.win = List3m(List1(self), current_color=curses.color_pair(1) | curses.A_BOLD)
         self.listbox = WinBox(self.win)
         self.create_windows()
 
@@ -117,11 +119,15 @@ class Main(App):
         '''
         maxy, maxx = self.screen_size
 
-        win = self.screen.derwin(maxy - 2, maxx, 1, 0)
+        if maxy > 2:
+            win = self.screen.derwin(maxy - 2, maxx, 1, 0)
+            # status
+            self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
+        else:
+            win = None
+            self.win3 = None
         self.listbox.set_win(win)
 
-        # status
-        self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
 
     def get_record(self, i: int) -> Record | None:
         len_ = len(self.record)
@@ -231,7 +237,7 @@ class Main(App):
             self.status(f'Could not load python module "webbrowser" for {url=}')
 
     def status(self, s: str, force=False):
-        if curses.isendwin():
+        if curses.isendwin() or not self.win3:
             return
         if force or self.status_str != s:
             with self.status_lock:
