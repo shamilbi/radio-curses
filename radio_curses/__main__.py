@@ -128,7 +128,6 @@ class Main(App):
             self.win3 = None
         self.listbox.set_win(win)
 
-
     def get_record(self, i: int) -> Record | None:
         len_ = len(self.record)
         if not i < len_:
@@ -230,7 +229,7 @@ class Main(App):
             return
         try:
             if shutil.which("xdg-open"):
-                subprocess.run(['xdg-open', url], check=False)
+                subprocess.run(['xdg-open', url], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
                 webbrowser.open(url)
         except ImportError:
