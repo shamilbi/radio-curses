@@ -260,6 +260,7 @@ class Main(App):
         self.input_loop()
 
     def input_loop(self):  # pylint: disable=too-many-branches,too-many-statements
+        curses.flushinp()
         for char_ord in self.getch():
             char = chr(char_ord)
 
