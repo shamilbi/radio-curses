@@ -91,7 +91,7 @@ def from_url(url: str, r: Record):
     if url.startswith('http://'):
         url = f'{url[:4]}s{url[4:]}'  # https://
     try:
-        resp = requests.get(url)  # pylint: disable=missing-timeout
+        resp = requests.get(url, timeout=5)
         xml = XML(resp.content)
         for e in xml.xpath('/opml/body'):
             from_xml(e, r)
