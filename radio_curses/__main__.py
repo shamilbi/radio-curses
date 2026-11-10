@@ -18,7 +18,7 @@ from curses_utils2.win import win_addstr
 from curses_utils2.winbox import WinBox
 
 from . import __project_name__, __version__
-from .db import Favourites, Record, from_url
+from .db import Favourites, Record, from_url, load_jsons
 from .utils import Mpv, RadioException, ThreadStr, search_words_url, str2clipboard
 
 HELP = [
@@ -90,6 +90,9 @@ class Main(App):
         }
         r = Record(d, self.record)
         self.record.children.append(r)
+
+        # +jsons
+        load_jsons(self.record)
 
         self.mpv = Mpv()
         self.radio = ''
