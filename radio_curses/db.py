@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import requests  # type: ignore[import-untyped]
@@ -14,6 +15,7 @@ from lxml.etree import (  # type: ignore[import-untyped]
 )
 from platformdirs import user_data_dir
 
+from . import __project_name__
 from .utils import RadioException
 
 
@@ -108,19 +110,70 @@ def from_file(file: Path, r: Record):
         from_xml(e, r)
 
 
+def from_json(file: Path, r: Record):
+    '''
+    from Radio Catalog json:
+        "source": "radio_browser_github",
+        "name": "MANGORADIO",
+        "url": "https://mangoradio.stream.laut.fm/mangoradio",
+        "url_resolved": "https://mangoradio.stream.laut.fm/mangoradio",
+        "homepage": "https://mangoradio.de/",
+        "favicon": "https://mangoradio.de/wp-content/uploads/cropped-Logo-192x192.webp",
+        "countrycode": "DE",
+        "state": "Rheinland-Pfalz",
+        "language": "english,german",
+        "tags": "music,variety",
+        "codec": "MP3",
+        "bitrate": 128,
+    '''
+    l = []
+    with open(file, 'r', encoding='utf-8') as fp:
+        l = json.load(fp)  # list of dict
+    for d in l:
+        name = d.get('name')
+        url = d.get('url')
+        if not name or not url:
+            continue
+        # name
+        cc = d.get('countrycode')
+        state = d.get('state')
+        if cc and state:
+            name += f' ({cc}, {state})'
+        elif cc:
+            name += f' ({cc})'
+        elif state:
+            name += f' ({state})'
+        d2 = {
+            'text': name,
+            'URL': d['url'],
+            'type': 'audio',
+        }
+        r.add_dict(d2)
+
+
+def load_jsons(r: Record):
+    dir_ = Path(user_data_dir(), __project_name__)
+    if not dir_.is_dir():
+        return
+    for fpath in dir_.glob('*.json'):
+        r2 = Record({'text': fpath.name}, r)
+        r.children.append(r2)
+        from_json(fpath, r2)
+
+
 class Favourites(Record):
     def __init__(self, parent: Record):
         super().__init__({'text': 'Favourites'}, parent)
 
     def load_from_home(self):
-        for i in ('radio-curses', 'curseradio'):
+        for i in (__project_name__, 'curseradio'):
             file = Path(user_data_dir(), i, 'favourites.opml')
             if file.is_file():
                 from_file(file, self)
                 return
 
     def save_to_home(self):
-        dir_ = Path(user_data_dir(), 'radio-curses')
+        dir_ = Path(user_data_dir(), __project_name__)
         dir_.mkdir(mode=0o755, exist_ok=True)
         file = dir_ / 'favourites.opml'
 
