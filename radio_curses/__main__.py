@@ -40,8 +40,6 @@ HELP = [
     ("Ctrl-U", "Copy URL to clipboard"),
 ]
 
-OPML_URL = 'https://opml.radiotime.com/'
-
 
 class List1(List3mProto):
     def __init__(self, app: Main):
@@ -78,9 +76,20 @@ class Main(App):
         curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
         self.record = Record({})  # root record
+
+        # +Favourites
         self.fav = Favourites(self.record)
         self.fav.load_from_home()
         self.record.children.append(self.fav)
+
+        # +opml.radiotime.com
+        d = {
+            'text': 'opml.radiotime.com',
+            'type': 'link',
+            'URL': 'https://opml.radiotime.com/',
+        }
+        r = Record(d, self.record)
+        self.record.children.append(r)
 
         self.mpv = Mpv()
         self.radio = ''
@@ -97,17 +106,12 @@ class Main(App):
 
     def from_url(self, url: str, r: Record) -> bool:
         try:
+            self.status(f'Load OPML: {url} ...')
             from_url(url, r)
             return True
         except RadioException as e:
             self.status(f'Error: {e}')
             return False
-
-    def load_opml(self):
-        self.status(f'Load OPML: {OPML_URL} ...')
-        if self.from_url(OPML_URL, self.record):
-            self.status('OK')
-        self.refresh_all()
 
     def create_windows(self):
         '''
@@ -256,7 +260,6 @@ class Main(App):
 
     def run(self):
         self.refresh_all()
-        self.load_opml()
         self.input_loop()
 
     def input_loop(self):  # pylint: disable=too-many-branches,too-many-statements
