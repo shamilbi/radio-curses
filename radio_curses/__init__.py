@@ -1,3 +1,3 @@
 __project_name__ = 'radio-curses'
 __homepage__ = 'https://github.com/shamilbi/radio-curses'
-__version__ = '0.25.2'
+__version__ = '0.26.0'
