@@ -8,9 +8,11 @@ Internet radio in the terminal. A fork of `curseradio`_.
 radio-curses is a `curses` interface for browsing and playing an `OPML`_ directory of internet radio streams.
 It is designed to use the *tunein* directory found at `opml.radiotime.com`_, but could be adapted to others.
 
+Since version 0.26.0 it automatically imports json files (in `RadioCatalog`_ style) from ~/.local/share/radio-curses/
+
 Audio playback uses `mpv`_. Lyrics are searched on `genius.com`_.
 
-radio-curses requires `python3` and the libraries `requests`_, `lxml`_, `xdg-base-dirs`_, and `curses-utils2`_.
+radio-curses requires `python3` and the libraries `requests`_, `lxml`_, `platformdirs`_, and `curses-utils2`_.
 
 |demo|
 
@@ -44,6 +46,7 @@ The current hotkeys are:
 .. _mpv: https://github.com/mpv-player/mpv
 .. _requests: https://pypi.org/project/requests/
 .. _lxml: https://pypi.org/project/lxml/
-.. _xdg-base-dirs: https://pypi.org/project/xdg-base-dirs/
+.. _platformdirs: https://pypi.org/project/platformdirs/
 .. _curses-utils2: https://pypi.org/project/curses-utils2/
 .. _genius.com: https://genius.com/
+.. _RadioCatalog: https://radio-playlist.github.io/RadioPlaylist/
