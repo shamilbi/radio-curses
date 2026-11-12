@@ -14,6 +14,7 @@ from threading import Event, RLock, Thread
 from curses_utils2.app import App, start_curses_app
 from curses_utils2.list3m import List3m, List3mProto
 from curses_utils2.text import win_help
+from curses_utils2.utils import RowString
 from curses_utils2.win import win_addstr
 from curses_utils2.winbox import WinBox
 
@@ -37,6 +38,7 @@ HELP = [
     ("Enter", "Play selected radio"),
     ("Space", "Stop/Resume"),
     ("L", "Search lyrics in browser"),
+    ("Ctrl-T", "Copy Title to clipboard"),
     ("Ctrl-U", "Copy URL to clipboard"),
 ]
 
@@ -47,12 +49,14 @@ class List1(List3mProto):
         self.app = app
 
     def get_record_str(self, i: int) -> Generator[str]:
-        if not (r := self.app.get_record(i)):
-            yield ''
+        app = self.app
+        if not (r := app.get_record(i)):
+            yield app.row_string.value('', '')
         elif r.isdir():
-            yield f'{r.text}/'
+            yield app.row_string.value(f'{r.text}/', '')
         else:
-            yield r.text
+            url = r.d.get('URL') or ''
+            yield app.row_string.value(r.text, url)
 
     def records_len(self) -> int:
         return len(self.app.record)
@@ -104,7 +108,11 @@ class Main(App):
         self.status_str = ''
 
         self.win = List3m(List1(self), current_color=curses.color_pair(1) | curses.A_BOLD)
-        self.listbox = WinBox(self.win)
+        self.listbox = WinBox(self.win, offy=1)
+
+        # title, url
+        self.row_string = RowString(70, 0)
+
         self.create_windows()
 
     def from_url(self, url: str, r: Record) -> bool:
@@ -116,6 +124,9 @@ class Main(App):
             self.status(f'Error: {e}')
             return False
 
+    def create_header(self):
+        return self.row_string.value('Title', 'URL')
+
     def create_windows(self):
         '''
         radio-curses v...
@@ -126,7 +137,8 @@ class Main(App):
         '''
         maxy, maxx = self.screen_size
 
-        if maxy > 2:
+        if maxy > 3:
+            # 1 - header, 2 - box, 1 - status
             win = self.screen.derwin(maxy - 2, maxx, 1, 0)
             # status
             self.win3 = self.screen.derwin(1, maxx, maxy - 1, 0)
@@ -151,7 +163,7 @@ class Main(App):
             s += f' {proxy=}'
         win_addstr(self.screen, 0, 1, s)
 
-        self.listbox.refresh()
+        self.listbox.refresh(self.create_header())
 
         self.status(self.status_str, force=True)
 
@@ -227,6 +239,15 @@ class Main(App):
         else:
             self.status('URL is empty')
 
+    def title2clipboard(self):
+        if not (r := self.get_record(self.win.idx)):
+            return
+        if title := r.d.get('text', None):
+            str2clipboard(title)
+            self.status(f'Title copied: {title}')
+        else:
+            self.status('Title is empty')
+
     def search_lyrics(self):
         song = self.song.get()
         if not song:
@@ -293,6 +314,8 @@ class Main(App):
                 self.refresh_all()
             elif char == 'L':
                 self.search_lyrics()
+            elif char_ord == 20:  # ^T
+                self.title2clipboard()
             elif char_ord == 21:  # ^U
                 self.url2clipboard()
 
