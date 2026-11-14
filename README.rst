@@ -33,6 +33,7 @@ The current hotkeys are:
     * Enter: Play selected radio
     * Space: Stop/Resume
     * L: Search lyrics in browser
+    * Ctrl-T: Copy Title to clipboard
     * Ctrl-U: Copy URL to clipboard
 
 .. |pypi| image:: https://img.shields.io/pypi/v/radio-curses
