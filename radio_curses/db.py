@@ -16,7 +16,10 @@ from lxml.etree import (  # type: ignore[import-untyped]
 from platformdirs import user_data_dir
 
 from . import __project_name__
-from .utils import RadioException
+from .utils import RadioException, glob_file
+
+USER_DATA_DIR = Path(user_data_dir(), __project_name__)
+USER_DATA_DIR.mkdir(mode=0o755, exist_ok=True)
 
 
 class Record:
@@ -151,14 +154,72 @@ def from_json(file: Path, r: Record):
         r.add_dict(d2)
 
 
+def from_m3u(file: Path, r: Record):
+    '''
+    #EXTURL:http://relay.181.fm:8072/;
+    #EXTINF: Studio 181
+    http://relay.181.fm:8072/;
+    '''
+    extinf_prefix = '#EXTINF:'
+    with open(file, 'r', encoding='utf-8') as fp:
+        find_extinf = True
+        name = ''
+        for line in fp:
+            if not find_extinf:
+                if line.startswith('#'):
+                    # bad format
+                    find_extinf = True
+                    continue
+                url = line.strip().rstrip(';')
+                d = {
+                    'text': name,
+                    'URL': url,
+                    'type': 'audio',
+                }
+                r2 = Record(d, r)
+                r.children.append(r2)
+            if not line.startswith(extinf_prefix):
+                continue
+            name = line[len(extinf_prefix) :].strip()
+            if name.startswith('-1'):
+                # -1....,name
+                i = name.rfind(',')
+                if i != -1:
+                    name = name[i + 1 :]
+                else:
+                    name = name[2:]
+            find_extinf = False
+
+
 def load_jsons(r: Record):
-    dir_ = Path(user_data_dir(), __project_name__)
-    if not dir_.is_dir():
-        return
-    for fpath in dir_.glob('*.json'):
+    def check_parent(fpath: Path, parent: Record) -> Record:
+        rel = fpath.relative_to(USER_DATA_DIR)
+        parents = rel.parents[-1::-1][1:]  # a/b/c -> a, a/b, a/b/c
+        r = parent
+        for p in parents:
+            key = str(p)
+            if key in cache:
+                r2 = cache[key]
+            else:
+                r2 = Record({'text': p.name}, r)
+                r.children.append(r2)
+                cache[key] = r2
+            r = r2
+        return r
+
+    # json
+    for fpath in glob_file(USER_DATA_DIR, '*.json'):
         r2 = Record({'text': fpath.name}, r)
         r.children.append(r2)
         from_json(fpath, r2)
+
+    # m3u
+    cache: dict[str, Record] = {}
+    for fpath in glob_file(USER_DATA_DIR, '**/*.m3u'):
+        parent = check_parent(fpath, r)
+        r2 = Record({'text': fpath.name}, parent)
+        parent.children.append(r2)
+        from_m3u(fpath, r2)
 
 
 class Favourites(Record):
@@ -173,9 +234,7 @@ class Favourites(Record):
                 return
 
     def save_to_home(self):
-        dir_ = Path(user_data_dir(), __project_name__)
-        dir_.mkdir(mode=0o755, exist_ok=True)
-        file = dir_ / 'favourites.opml'
+        file = USER_DATA_DIR / 'favourites.opml'
 
         xml = Element("opml")
         body = SubElement(xml, "body")
