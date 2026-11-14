@@ -10,6 +10,8 @@ It is designed to use the *tunein* directory found at `opml.radiotime.com`_, but
 
 Since version 0.26.0 it automatically imports json files (in `RadioCatalog`_ style) from ~/.local/share/radio-curses/
 
+Since version 0.28.0 it automatically imports m3u files from ~/.local/share/radio-curses/
+
 Audio playback uses `mpv`_. Lyrics are searched on `genius.com`_.
 
 radio-curses requires `python3` and the libraries `requests`_, `lxml`_, `platformdirs`_, and `curses-utils2`_.
