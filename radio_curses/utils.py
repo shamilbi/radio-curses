@@ -5,7 +5,10 @@ import os
 import shutil
 import socket
 import subprocess
+import urllib.parse
+from collections.abc import Generator
 from contextlib import contextmanager
+from pathlib import Path
 from subprocess import PIPE, Popen
 from threading import Event, RLock
 
@@ -45,7 +48,10 @@ class Mpv:
             return
         self.stop()
         if url.startswith('http://'):
-            url = f'{url[:4]}s{url[4:]}'  # https://
+            p = urllib.parse.urlparse(url)
+            if not p.port:
+                # -> https
+                url = f'{url[:4]}s{url[4:]}'  # https://
         cmd: list[str] = self.cmd + [url]
         self.proc = subprocess.Popen(  # pylint: disable=consider-using-with
             cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL
@@ -142,3 +148,11 @@ def search_words_url(song: str) -> str | None:
         return None
     s = ' '.join(words)
     return f'{LYRICS_SEARCH_URL}{s}'
+
+
+def glob_file(dir_: Path, glob: str) -> Generator[Path]:
+    if dir_.is_dir() and glob:
+        for fpath in dir_.glob(glob):
+            if not fpath.is_file():
+                continue
+            yield fpath
