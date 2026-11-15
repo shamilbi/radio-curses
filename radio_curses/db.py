@@ -191,35 +191,37 @@ def from_m3u(file: Path, r: Record):
             find_extinf = False
 
 
-def load_jsons(r: Record):
-    def check_parent(fpath: Path, parent: Record) -> Record:
-        rel = fpath.relative_to(USER_DATA_DIR)
-        parents = rel.parents[-1::-1][1:]  # a/b/c -> a, a/b, a/b/c
-        r = parent
-        for p in parents:
-            key = str(p)
-            if key in cache:
-                r2 = cache[key]
-            else:
-                r2 = Record({'text': p.name}, r)
-                r.children.append(r2)
-                cache[key] = r2
-            r = r2
-        return r
+def load_dir(dir_: Path, r: Record):
+    def add_child(d: dict, r: Record):
+        r2 = Record(d, r)
+        r.children.append(r2)
 
     # json
-    for fpath in glob_file(USER_DATA_DIR, '*.json'):
-        r2 = Record({'text': fpath.name}, r)
-        r.children.append(r2)
-        from_json(fpath, r2)
+    for fpath in glob_file(dir_, '*.json'):
+        d = {
+            'text': fpath.name,
+            'type': 'json',
+            'fpath': fpath,
+        }
+        add_child(d, r)
 
     # m3u
-    cache: dict[str, Record] = {}
-    for fpath in glob_file(USER_DATA_DIR, '**/*.m3u'):
-        parent = check_parent(fpath, r)
-        r2 = Record({'text': fpath.name}, parent)
-        parent.children.append(r2)
-        from_m3u(fpath, r2)
+    for fpath in glob_file(dir_, '*.m3u'):
+        d = {
+            'text': fpath.name,
+            'type': 'm3u',
+            'fpath': fpath,
+        }
+        add_child(d, r)
+
+    # dirs
+    for fpath in (x for x in dir_.iterdir() if x.is_dir()):
+        d = {
+            'text': fpath.name,
+            'type': 'dir',
+            'fpath': fpath,
+        }
+        add_child(d, r)
 
 
 class Favourites(Record):
