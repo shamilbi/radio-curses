@@ -19,7 +19,7 @@ from curses_utils2.win import win_addstr
 from curses_utils2.winbox import WinBox
 
 from . import __project_name__, __version__
-from .db import Favourites, Record, from_url, load_jsons
+from .db import USER_DATA_DIR, Favourites, Record, from_json, from_m3u, from_url, load_dir
 from .utils import Mpv, RadioException, ThreadStr, search_words_url, str2clipboard
 
 HELP = [
@@ -96,7 +96,7 @@ class Main(App):
         self.record.children.append(r)
 
         # +jsons
-        load_jsons(self.record)
+        load_dir(USER_DATA_DIR, self.record)
 
         self.mpv = Mpv()
         self.radio = ''
@@ -175,8 +175,15 @@ class Main(App):
         self.record.pos = (self.win.cur, self.win.idx)
         if r.isdir():
             self.record = r
-            if not self.record.children and 'URL' in r.d:
-                self.from_url(r.d['URL'], self.record)
+            if not self.record.children:
+                if 'URL' in r.d:
+                    self.from_url(r.d['URL'], self.record)
+                elif r.d.get('type') == 'json':
+                    from_json(r.d['fpath'], r)
+                elif r.d.get('type') == 'm3u':
+                    from_m3u(r.d['fpath'], r)
+                elif r.d.get('type') == 'dir':
+                    load_dir(r.d['fpath'], r)
             self.win.cur, self.win.idx = self.record.pos
             self.win.refresh()
 
